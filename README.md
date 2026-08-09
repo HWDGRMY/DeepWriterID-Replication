@@ -23,7 +23,7 @@
 DeepWriterID-Replication/
 ├── configs/                            # 参数配置文件
 │   └── default.yaml                    # 全局超参数
-├── data/                               # 数据目录（不上传 GitHub）
+├── data/                               # 数据目录
 │   ├── raw/                            # 存放原始 .wptt 轨迹文件
 │   └── features/                       # 存放 metadata.csv
 ├── src/                                # 核心源码包
