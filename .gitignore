@@ -1,29 +1,17 @@
-# Python & PyCharm
-__pycache__/
-*.pyc
-*.pyo
-.venv/
-venv/
-.idea/
-.vscode/
-
-# 原始数据与特征
-data/raw/
-data/features/
-*.wptt
-*.npy
+# 原始数据与特征（只忽略具体文件，保留空文件夹）
+data/raw/*.wptt
+data/features/*.npy
 
 # 训练产出物
-outputs/checkpoints/
-outputs/logs/
-outputs/results/
-*.pth
-*.pt
+outputs/checkpoints/*.pth
+outputs/logs/*.csv
+outputs/results/*.png
 
-# Windows / macOS 系统文件
+# 系统与缓存文件
+__pycache__/
+*.pyc
+.venv/
+.idea/
+.vscode/
 Thumbs.db
 desktop.ini
-.DS_Store
-
-# 本地环境配置
-.env
