@@ -123,6 +123,20 @@ random.seed(42)  # 数字 42 可换成任意你喜欢的整数
 4. 运行 `python scripts/evaluate.py`。
 
 > ⚠️ **重要提示**：如果在本地重新运行 `preprocess.py` 生成新的 `metadata.csv`，测试集分布会发生改变，将无法复现 95.09% 的准确率。
+ 
+## 📦 模型文件说明（不公开）
+
+本项目中的预训练模型文件（`outputs/checkpoints/dcnn_best.pth`）**不包含在本 GitHub 仓库中**，原因如下：
+
+1. **算力成本极高**：该模型是基于 **RTX 4090D 显卡（24GB VRAM）** 及 **18核 AMD EPYC 处理器**，历经 **50 轮完整训练（约 3 天计算时间）** 才训练得到。该训练过程消耗了相当的电力和云服务器租赁成本。
+2. **模型资产保护**：该模型在 **1019 个书写者** 的 CASIA 数据集上达到了 **95.09%** 的页面级准确率，具有较高的研究与复刻价值。作者希望保护该训练成果的完整性，避免未经授权的随意扩散。
+
+### 📎 如何获取模型文件？
+如果你需要该模型用于**学术研究**或**商业合作**，可以通过以下方式联系作者：
+
+- **GitHub Issues**：在本项目 GitHub 仓库提交 Issues 并说明用途。
+
+作者将根据具体用途（学术/商业）提供模型文件，部分情况下可能收取适当的算力成本费。感谢你的理解与支持。
 
 ## 致谢
 - 原始论文：Weixin Yang, Lianwen Jin, et al. *DeepWriterID: An End-to-end Online Text-independent Writer Identification System*.
