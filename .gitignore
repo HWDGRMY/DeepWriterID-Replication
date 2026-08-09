@@ -1,0 +1,29 @@
+# Python & PyCharm
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.idea/
+.vscode/
+
+# 原始数据与特征
+data/raw/
+data/features/
+*.wptt
+*.npy
+
+# 训练产出物
+outputs/checkpoints/
+outputs/logs/
+outputs/results/
+*.pth
+*.pt
+
+# Windows / macOS 系统文件
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# 本地环境配置
+.env

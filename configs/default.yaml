@@ -1,0 +1,16 @@
+# 训练参数
+batch_size: 256
+epochs: 50
+initial_lr: 0.0005
+eval_frequency: 1
+
+# 硬件与加载参数（优化自 18核 60GB 环境）
+device: cuda
+num_workers: 16
+pin_memory: false
+prefetch_factor: 1
+multiprocessing_context: spawn
+
+# 路径配置
+data_root: ./data
+output_root: ./outputs
