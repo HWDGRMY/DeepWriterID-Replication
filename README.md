@@ -158,6 +158,13 @@ python scripts/train.py
 - 每轮结束后，最新模型将保存至 `outputs/checkpoints/dcnn_latest.pth`。
 - 如果该轮测试集准确率刷新记录，将额外保存至 `outputs/checkpoints/dcnn_best.pth`。
 
+**默认配置说明：**
+- `epochs：50`（本项目跑出 95.09% 成绩时使用的轮数）
+- `batch_size：256`
+- `initial_lr：0.0005`
+
+如果你觉得 50 轮没有收敛完全，可以直接在 `configs/default.yaml` 里把 `epochs` 改成 `80` 或 `100`，脚本会自动断点续训。
+
 ### 4. 评估模型
 加载最佳模型并进行完整的页面级测试：
 ```bash
