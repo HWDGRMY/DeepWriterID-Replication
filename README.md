@@ -128,11 +128,18 @@ pip install -e .
 ```
 
 ### 2. 数据准备
-- 向中科院自动化所申请获取 CASIA-OLHWDB 在线文本数据（`.wptt` 文件）。官方网站申请地址：[https://nlpr.ia.ac.cn/databases/handwriting/Home.html](https://nlpr.ia.ac.cn/databases/handwriting/Home.html)
-- 将解压后的数据放在 `data/raw/` 目录下，保持文件夹结构为：
+
+本项目使用的数据集为 **CASIA-OLHWDB 2.0-2.2 在线手写文本数据集**。
+
+- 官方下载地址：[https://nlpr.ia.ac.cn/databases/handwriting/Home.html](https://nlpr.ia.ac.cn/databases/handwriting/Home.html)，目前该数据集已可在官网直接下载，无需申请。
+- 下载后，将解压出的 `WPTT2.0-Train`、`WPTT2.0-Test` 等文件夹放置在项目的 `data/raw/` 目录下，结构如下：
   ```text
-  data/raw/WPTT2.x-Train/
-  data/raw/WPTT2.x-Test/
+  data/raw/WPTT2.0-Train/
+  data/raw/WPTT2.0-Test/
+  data/raw/WPTT2.1-Train/
+  data/raw/WPTT2.1-Test/
+  data/raw/WPTT2.2-Train/
+  data/raw/WPTT2.2-Test/
   ```
 - 运行预处理脚本生成 `metadata.csv`：
   ```bash
@@ -156,28 +163,28 @@ python scripts/evaluate.py
 
 ## 🎲 随机种子与数据划分说明
 
-本项目在数据预处理阶段（`scripts/preprocess.py`）采用了“按作者分组，随机打乱，每名作者取 1 页作测试集，其余 4 页作训练集”的划分策略。
+本项目在数据预处理阶段（`scripts/preprocess.py`）采用“按作者分组，随机打乱，每名作者取 1 页作测试集，其余 4 页作训练集”的划分策略。
 
 ### 1. 随机种子状态（默认）
-当前开源版本的 `preprocess.py` **没有设置固定的随机种子**。这意味着每次运行 `python scripts/preprocess.py`，都会对每个作者的 5 个页面进行一次全新的随机划分，测试页的选取可能不同，最终跑出的准确率可能会在 **94.5%~95.5%** 之间轻微浮动。
+当前 `preprocess.py` **未设置固定的随机种子**。每次运行都会产生全新的随机划分，最终测试准确率可能在 **94.5%~95.5%** 之间轻微浮动。
 
-### 2. 如何固定划分，保证结果可复现
-如果你希望每次运行划分后的结果完全一致，请在 `preprocess.py` 的 `main()` 函数开头手动添加一行代码：
+### 2. 固定划分的方法
+若希望每次划分结果一致，可在 `preprocess.py` 的 `main()` 函数开头添加：
 ```python
-random.seed(42)  # 数字 42 可换成任意你喜欢的整数
+random.seed(42)
 ```
-但请注意，由于不同操作系统（Linux vs Windows）下文件遍历顺序不同，即使种子相同，生成的 `metadata.csv` 也可能不同，因此无法保证准确率的完全一致性。
+由于不同操作系统（Linux vs Windows）下文件遍历顺序不同，该操作也无法保证 100% 完全一致。
 
-### 3. 严格复现 95.09% 成绩的唯一方法
-本项目对外宣传的 **95.09% (969/1019)** 是基于**一份特定的 `metadata.csv`**（即作者在云端训练 50 轮时随机选中并固定的那份测试集划分）得出的。
+### 3. 严格复现 95.09% 成绩的方法
+本项目宣传的 **95.09% (969/1019)** 基于 **特定的 `metadata.csv` 划分文件** 与 **已训练好的 `dcnn_best.pth` 模型权重**。
 
-**如果你想严格复现 95.09% 这个数字，唯一可靠的方法是：**
-1. 直接使用作者提供的 `metadata.csv` 文件。
-2. 将该文件中的路径修改为适合你本地的路径（可使用脚本一键替换，或手动修改）。
-3. 将修改后的 `metadata.csv` 放入你的 `data/features/` 目录。
+若要精准复现该成绩：
+1. 直接使用项目提供的 `metadata.csv`（位于 `data/features/`）。
+2. 根据你的本地路径，修改该文件中的文件路径。
+3. 配合笔者训练好的 `dcnn_best.pth` 模型。
 4. 运行 `python scripts/evaluate.py`。
 
-> ⚠️ **重要提示**：如果在本地重新运行 `preprocess.py` 生成新的 `metadata.csv`，测试集分布会发生改变，将无法复现 95.09% 的准确率。
+> 自行重新训练模型产生的权重，因硬件、CUDA 版本和随机性的细微差异，最终准确率会在 94.8%~95.2% 之间浮动，这是深度学习训练的正常现象。
  
 ## 📦 模型文件说明（不公开）
 
