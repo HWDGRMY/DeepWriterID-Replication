@@ -19,7 +19,6 @@ def _pad_to_96(tensor):
     return torch.nn.functional.pad(tensor, pad, mode='constant', value=0)
 
 def train(config):
-    # 从配置文件读取参数（兼容云端和本地）
     BATCH_SIZE = config.get('batch_size', 256)
     EPOCHS = config.get('epochs', 50)
     INITIAL_LR = config.get('initial_lr', 0.0005)
@@ -29,10 +28,8 @@ def train(config):
     if torch.cuda.is_available():
         torch.backends.cudnn.benchmark = True
 
-    # 绝对定位项目根目录，确保云端和本地路径一致
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     metadata_file = os.path.join(BASE_DIR, 'data', 'features', 'metadata.csv')
-
     if not os.path.exists(metadata_file):
         print(f"❌ 错误：找不到 {metadata_file}。请确认是否已运行预处理脚本。")
         return
@@ -54,7 +51,6 @@ def train(config):
     print(f"📊 训练集样本数: {len(train_dataset)}")
     print(f"📊 作者（类别）总数: {num_classes}")
 
-    # 读取配置中的并行参数（本地设为0可防卡死，云端可设16）
     train_loader = DataLoader(
         train_dataset,
         batch_size=BATCH_SIZE,
@@ -68,9 +64,9 @@ def train(config):
     model = DCNN(num_classes=num_classes).to(DEVICE)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=INITIAL_LR)
+    # 调度器的总轮次固定为 EPOCHS（这样内部会自动计算剩余衰减）
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=EPOCHS)
 
-    # 创建输出目录
     log_path = os.path.join(BASE_DIR, 'outputs', 'logs', 'training_log.csv')
     latest_model_path = os.path.join(BASE_DIR, 'outputs', 'checkpoints', 'dcnn_latest.pth')
     best_model_path = os.path.join(BASE_DIR, 'outputs', 'checkpoints', 'dcnn_best.pth')
@@ -79,25 +75,40 @@ def train(config):
     start_epoch = 1
     best_test_acc = 0.0
 
-    # 断点续训（仅加载权重，优化器状态重置以防震荡）
+    # ========== 真正的断点续训（恢复优化器和调度器状态） ==========
     if os.path.exists(best_model_path):
         checkpoint = torch.load(best_model_path, map_location=DEVICE)
-        if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
-            model.load_state_dict(checkpoint['model_state_dict'], strict=False)
-            start_epoch = checkpoint['epoch'] + 1
-            best_test_acc = checkpoint.get('best_acc', 0.0)
     elif os.path.exists(latest_model_path):
         checkpoint = torch.load(latest_model_path, map_location=DEVICE)
-        if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+    else:
+        checkpoint = None
+
+    if checkpoint is not None:
+        if 'model_state_dict' in checkpoint:
             model.load_state_dict(checkpoint['model_state_dict'], strict=False)
             start_epoch = checkpoint['epoch'] + 1
             best_test_acc = checkpoint.get('best_acc', 0.0)
+            # 如果检查点中包含了优化器和调度器的状态，则恢复它们
+            if 'optimizer_state_dict' in checkpoint and 'scheduler_state_dict' in checkpoint:
+                optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+                scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+                print("✅ 成功恢复优化器和调度器状态，学习率将从中断处继续下降。")
+            else:
+                # 若没有保存优化器/调度器，则重置（学习率回到 INITIAL_LR）
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] = INITIAL_LR
+                # 调度器需要重新初始化，但保持 T_max = EPOCHS，内部会重新计数
+                scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=EPOCHS)
+                print("⚠️ 检查点中未包含优化器/调度器状态，已重置学习率。建议使用最新完整检查点。")
+        else:
+            # 旧格式只存了权重，没有 epoch 信息，默认为从头开始
+            model.load_state_dict(checkpoint, strict=False)
+            print("⚠️ 检测到旧格式检查点，仅加载权重，训练将从 Epoch 1 重新开始。")
+    else:
+        print("🆕 未找到检查点，将从 Epoch 1 开始全新训练。")
 
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = INITIAL_LR
-    remaining_epochs = EPOCHS - start_epoch + 1
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=remaining_epochs)
-    print(f"✅ 将从 Epoch {start_epoch} 继续，初始学习率 {INITIAL_LR}")
+    print(f"✅ 将从 Epoch {start_epoch} 继续训练。")
+    # =============================================================
 
     for epoch in range(start_epoch, EPOCHS + 1):
         model.train()
@@ -122,7 +133,6 @@ def train(config):
         epoch_acc = correct_train / total_train
         print(f"Epoch {epoch} Train | Loss: {epoch_loss:.4f} | Acc: {epoch_acc:.4f}")
 
-        # 评估逻辑
         test_page_acc = 0.0
         if epoch % EVAL_FREQUENCY == 0:
             test_page_acc = evaluate_page_level(model, metadata_file, global_label_map, DEVICE)
@@ -134,12 +144,18 @@ def train(config):
         else:
             print(f"Epoch {epoch} Test | (已跳过测试，下次评估在 Epoch {epoch + (EVAL_FREQUENCY - (epoch % EVAL_FREQUENCY))})")
 
-        # 写入 CSV 日志
         with open(log_path, 'a', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow([epoch, f"{epoch_loss:.4f}", f"{epoch_acc:.4f}", f"{test_page_acc:.4f}"])
 
-        # 保存最新状态
-        torch.save({'epoch': epoch, 'model_state_dict': model.state_dict(), 'best_acc': best_test_acc}, latest_model_path)
+        # 🟢 保存完整检查点（模型、优化器、调度器）
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'scheduler_state_dict': scheduler.state_dict(),
+            'best_acc': best_test_acc
+        }, latest_model_path)
+
         scheduler.step()
         print("-" * 50)
