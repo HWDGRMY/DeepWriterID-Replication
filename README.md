@@ -219,13 +219,17 @@ random.seed(42)
 
 ### 📎 如何获取模型文件？
 
-训练该模型花费了约 80 元的云服务器算力成本。模型文件不随代码公开。
+您可以通过以下任意一种方式联系作者，获取模型文件：
 
-**获取方式：**
-请直接在 [GitHub Issues](https://github.com/HWDGRMY/DeepWriterID-Replication/issues) 页面提交需求并说明用途。
+- **通过 GitHub Issues 提交申请**  
+  请访问 [GitHub Issues 页面](https://github.com/HWDGRMY/DeepWriterID-Replication/issues) 新建一个 Issue，并简要说明您的使用目的（如科研、商业项目、个人测试等）。  
 
-**作者邮箱**：`zhouhao_oss@163.com`
-（如有商业合作、模型使用需求或任何问题，欢迎通过该邮箱直接联系作者，作者会在确认用途后提供模型获取方式。）
+- **通过邮件直接联系作者**  
+  发送邮件至作者邮箱：**`zhouhao_oss@163.com`**，请附上您的身份、用途及具体场景。  
+
+---
+
+>**注意**：模型文件仅限申请用途使用，请勿二次分发。  
 
 ## 致谢
 - 原始论文：Weixin Yang, Lianwen Jin, et al. *DeepWriterID: An End-to-end Online Text-independent Writer Identification System*.
