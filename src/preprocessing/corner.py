@@ -1,6 +1,14 @@
 import numpy as np
 
-def detect_corners(points, k=2, threshold=180.0):
+
+def detect_corners(points, k=2, threshold=3):
+    """
+    拐点检测（弯曲值法，论文公式 7）。
+
+    重要：数据加载时坐标已被除以 10（量级 0~720），
+    因此 threshold 必须使用与缩放后坐标匹配的值（默认 3）。
+    若使用 v1 的 threshold=180，将检测不到任何拐点。
+    """
     corners_idx = []
     n = len(points)
     if n < 2 * k + 1:
@@ -11,11 +19,15 @@ def detect_corners(points, k=2, threshold=180.0):
         x_i, y_i = points[i]
         x_f, y_f = points[i + k]
         x_b, y_b = points[i - k]
-        beta = max(abs(x_f + x_b - 2 * x_i), abs(y_f + y_b - 2 * y_i)) / (2 * k)
+        beta = max(
+            abs(x_f + x_b - 2 * x_i),
+            abs(y_f + y_b - 2 * y_i)
+        ) / (2 * k)
         bending_values[i] = beta
 
     for i in range(k, n - k):
-        if bending_values[i] > threshold and bending_values[i] > max(bending_values[i-1], bending_values[i+1]):
+        if (bending_values[i] > threshold
+                and bending_values[i] > max(bending_values[i - 1], bending_values[i + 1])):
             corners_idx.append(i)
 
     return corners_idx

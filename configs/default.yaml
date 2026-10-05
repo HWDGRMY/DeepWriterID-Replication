@@ -1,15 +1,17 @@
+# 微调模式：从 95.09% 模型继续训练
+#pretrained_path: outputs/checkpoints/dcnn_best.pth
+
 # 训练参数
-batch_size: 256
+batch_size: 192
 epochs: 50
 initial_lr: 0.0005
 eval_frequency: 1
 
-# 硬件与加载参数（优化自 18核 60GB 环境）
+# 硬件与加载参数
 device: cuda
 num_workers: 16
-pin_memory: false
-prefetch_factor: 1
-multiprocessing_context: spawn
+page_workers: 8
+segment_workers: 8
 
 # 路径配置
 data_root: ./data
